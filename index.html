@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Мое приложение</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .emoji-big {
+            font-size: 48px;
+            text-align: center;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .user-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+        }
+        .user-info strong {
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #555;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .footer-text {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="emoji-big">🎯</span>
+        <h1>Мое приложение</h1>
+        <p class="subtitle">Встроенное приложение в Telegram</p>
+        
+        <div class="user-info" id="userInfo">
+            <strong>👤 Пользователь:</strong> <span id="userName">Загрузка...</span>
+        </div>
+        
+        <div class="input-group">
+            <label for="nameInput">📝 Ваше имя</label>
+            <input type="text" id="nameInput" placeholder="Введите ваше имя">
+        </div>
+        
+        <div class="input-group">
+            <label for="messageInput">💬 Сообщение</label>
+            <textarea id="messageInput" placeholder="Напишите что-нибудь...">Привет, бот!</textarea>
+        </div>
+        
+        <button class="btn" id="sendBtn">📤 Отправить данные</button>
+        
+        <div class="status" id="status"></div>
+        <div class="footer-text">Данные отправляются в Telegram бота</div>
+    </div>
+
+    <script>
+        // ====== Telegram WebApp API ======
+        const tg = window.Telegram?.WebApp;
+        let userData = null;
+        
+        if (tg) {
+            tg.expand();
+            userData = tg.initDataUnsafe?.user || null;
+            
+            if (userData) {
+                document.getElementById('userName').textContent = 
+                    userData.first_name + (userData.last_name ? ' ' + userData.last_name : '');
+                document.getElementById('nameInput').value = userData.first_name || 'Гость';
+            }
+        } else {
+            document.getElementById('userName').textContent = 'Не в Telegram';
+        }
+        
+        // ====== Отправка данных ======
+        async function sendData() {
+            const name = document.getElementById('nameInput').value.trim();
+            const message = document.getElementById('messageInput').value.trim();
+            const statusEl = document.getElementById('status');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (!name || !message) {
+                statusEl.textContent = '⚠️ Пожалуйста, заполните все поля';
+                statusEl.className = 'status show error';
+                return;
+            }
+            
+            const data = {
+                user_id: userData?.id || 'anonymous',
+                username: userData?.username || 'anonymous',
+                name: name,
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            sendBtn.disabled = true;
+            statusEl.textContent = '⏳ Отправка...';
+            statusEl.className = 'status show';
+            
+            try {
+                if (tg) {
+                    tg.sendData(JSON.stringify(data));
+                    statusEl.textContent = '✅ Данные успешно отправлены!';
+                    statusEl.className = 'status show success';
+                    setTimeout(() => tg.close(), 1500);
+                } else {
+                    // Отправка на сервер (для теста вне Telegram)
+                    const response = await fetch('/webhook', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        statusEl.textContent = '✅ Данные успешно отправлены!';
+                        statusEl.className = 'status show success';
+                    } else {
+                        statusEl.textContent = '❌ Ошибка: ' + (result.message || 'Неизвестная ошибка');
+                        statusEl.className = 'status show error';
+                    }
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Ошибка: ' + error.message;
+                statusEl.className = 'status show error';
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+        
+        document.getElementById('sendBtn').addEventListener('click', sendData);
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                sendData();
+            }
+        });
+        
+        console.log('✅ WebApp загружен!');
+    </script>
+</body>
+</html>
