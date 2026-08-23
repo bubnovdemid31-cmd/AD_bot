@@ -249,6 +249,30 @@
             background: #1f543a;
         }
 
+        /* ===== КРАСИВОЕ СООБЩЕНИЕ ===== */
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 20px 0 8px;
+        }
+        .success-message.show {
+            display: block;
+        }
+        .success-message .emoji {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .success-message h3 {
+            color: #1f6a44;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        .success-message p {
+            color: #3d6a53;
+            font-size: 15px;
+        }
+
         #formStatus {
             margin-top: 12px;
             font-weight: 500;
@@ -311,7 +335,15 @@
                     <label for="userEmail">Почта</label>
                     <input type="email" id="userEmail" placeholder="ivan@example.com" />
                 </div>
-                <button type="submit" class="btn-primary">Отправить заявку</button>
+
+                <!-- ===== КРАСИВОЕ СООБЩЕНИЕ ===== -->
+                <div class="success-message" id="successMessage">
+                    <span class="emoji">✅</span>
+                    <h3>Заявка отправлена!</h3>
+                    <p>Скоро свяжемся для уточнения деталей</p>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">Отправить заявку</button>
             </form>
             <div id="formStatus"></div>
         </div>
@@ -400,6 +432,8 @@
                     document.getElementById('modalDesc').textContent = selectedProduct.full;
                     document.getElementById('orderModal').classList.add('active');
                     document.getElementById('formStatus').textContent = '';
+                    document.getElementById('successMessage').classList.remove('show');
+                    document.getElementById('submitBtn').style.display = 'block';
                     document.getElementById('orderForm').reset();
                     document.body.style.overflow = 'hidden';
                 }
@@ -433,8 +467,9 @@
                 return;
             }
 
-            status.style.color = '#2d6b4a';
-            status.textContent = 'Отправка...';
+            status.textContent = '';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('successMessage').classList.add('show');
 
             // ===== ДАННЫЕ ДЛЯ ОТПРАВКИ =====
             const data = {
@@ -447,49 +482,28 @@
                 username: userData?.username || 'без_username'
             };
 
-            // ===== ОТПРАВКА В TELEGRAM (только админу K3n871) =====
+            // ===== ОТПРАВКА В TELEGRAM =====
             if (tg) {
                 try {
                     tg.sendData(JSON.stringify(data));
-                    status.style.color = '#1f6a44';
-                    status.textContent = '✅ Заявка отправлена! Мы свяжемся с вами.';
-                    form.reset();
-                    setTimeout(() => {
-                        closeModal();
-                        status.textContent = '';
-                    }, 2500);
                 } catch (error) {
                     console.error('Ошибка отправки:', error);
-                    status.style.color = '#b34a4a';
-                    status.textContent = '❌ Ошибка. Попробуйте позже.';
                 }
             } else {
-                // Если не в Telegram — отправляем через fetch
                 fetch('/webapp_data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === 'ok') {
-                        status.style.color = '#1f6a44';
-                        status.textContent = '✅ Заявка отправлена!';
-                        form.reset();
-                        setTimeout(() => {
-                            closeModal();
-                            status.textContent = '';
-                        }, 2500);
-                    } else {
-                        status.style.color = '#b34a4a';
-                        status.textContent = '❌ Ошибка. Попробуйте позже.';
-                    }
-                })
-                .catch(() => {
-                    status.style.color = '#b34a4a';
-                    status.textContent = '❌ Ошибка. Попробуйте позже.';
-                });
+                }).catch(error => console.error('Ошибка:', error));
             }
+
+            // Закрываем модал через 3 секунды
+            setTimeout(() => {
+                closeModal();
+                document.getElementById('successMessage').classList.remove('show');
+                document.getElementById('submitBtn').style.display = 'block';
+                form.reset();
+            }, 3000);
         });
     </script>
 
