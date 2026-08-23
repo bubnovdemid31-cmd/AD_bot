@@ -73,7 +73,6 @@
             display: flex;
             flex-direction: column;
             transition: 0.2s;
-            cursor: pointer;
         }
         .product-card:hover {
             transform: translateY(-2px);
@@ -118,6 +117,7 @@
             background: #1f543a;
         }
 
+        /* ===== МОДАЛ ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -142,6 +142,7 @@
             padding: 28px 24px;
             box-shadow: 0 40px 80px rgba(0, 20, 10, 0.25);
             animation: fadeUp 0.2s ease;
+            text-align: center;
         }
         @keyframes fadeUp {
             0% {
@@ -171,75 +172,42 @@
         .modal-close:hover {
             background: #cde0d4;
         }
-        .modal h2 {
-            font-size: 22px;
-            color: #0e2f24;
-            margin: 4px 0 2px;
+
+        .modal .emoji-big {
+            font-size: 56px;
+            display: block;
+            margin: 8px 0 12px;
         }
-        .modal-price {
+        .modal h2 {
+            font-size: 24px;
+            color: #0e2f24;
+            margin-bottom: 4px;
+        }
+        .modal .price {
             font-size: 20px;
             font-weight: 700;
             color: #1f6a44;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
-        .modal-desc {
+        .modal .desc {
             font-size: 15px;
             color: #1f3f32;
             white-space: pre-wrap;
-            margin-bottom: 18px;
             line-height: 1.6;
             border-top: 1px solid #d5e8dd;
-            padding-top: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #1e3f30;
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #d5e8dd;
-            border-radius: 14px;
-            font-size: 15px;
-            background: #fafffc;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: #3a8a5e;
-            box-shadow: 0 0 0 3px rgba(58, 138, 94, 0.08);
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        @media (max-width: 480px) {
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-            .modal {
-                padding: 20px 14px;
-            }
+            padding-top: 16px;
+            margin-bottom: 20px;
+            text-align: left;
         }
 
         .btn-primary {
             background: #2d6b4a;
             color: #ffffff;
             border: none;
-            padding: 12px 0;
+            padding: 14px 0;
             border-radius: 60px;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
             transition: 0.25s;
             width: 100%;
@@ -249,36 +217,27 @@
             background: #1f543a;
         }
 
-        /* ===== КРАСИВОЕ СООБЩЕНИЕ ===== */
+        /* ===== СООБЩЕНИЕ ПОСЛЕ ЗАКАЗА ===== */
         .success-message {
             display: none;
-            text-align: center;
-            padding: 20px 0 8px;
+            padding: 20px 0;
         }
         .success-message.show {
             display: block;
         }
         .success-message .emoji {
-            font-size: 48px;
+            font-size: 64px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         .success-message h3 {
             color: #1f6a44;
-            font-size: 22px;
-            margin-bottom: 4px;
+            font-size: 24px;
+            margin-bottom: 6px;
         }
         .success-message p {
             color: #3d6a53;
-            font-size: 15px;
-        }
-
-        #formStatus {
-            margin-top: 12px;
-            font-weight: 500;
-            text-align: center;
-            min-height: 20px;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         footer {
@@ -316,36 +275,22 @@
     <div class="modal-overlay" id="orderModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal()">×</button>
-            <h2 id="modalTitle">Название</h2>
-            <div class="modal-price" id="modalPrice">от 0 ₽</div>
-            <div class="modal-desc" id="modalDesc">Описание</div>
 
-            <form id="orderForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="userName">Имя *</label>
-                        <input type="text" id="userName" placeholder="Иван" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="userPhone">Телефон *</label>
-                        <input type="tel" id="userPhone" placeholder="+7 900 123 45 67" required />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="userEmail">Почта</label>
-                    <input type="email" id="userEmail" placeholder="ivan@example.com" />
-                </div>
+            <!-- Детали услуги -->
+            <div id="serviceDetails">
+                <span class="emoji-big">📦</span>
+                <h2 id="modalTitle">Название</h2>
+                <div class="price" id="modalPrice">от 0 ₽</div>
+                <div class="desc" id="modalDesc">Описание</div>
+                <button class="btn-primary" id="orderBtn">📤 Заказать</button>
+            </div>
 
-                <!-- ===== КРАСИВОЕ СООБЩЕНИЕ ===== -->
-                <div class="success-message" id="successMessage">
-                    <span class="emoji">✅</span>
-                    <h3>Заявка отправлена!</h3>
-                    <p>Скоро свяжемся для уточнения деталей</p>
-                </div>
-
-                <button type="submit" class="btn-primary" id="submitBtn">Отправить заявку</button>
-            </form>
-            <div id="formStatus"></div>
+            <!-- Сообщение после заказа -->
+            <div class="success-message" id="successMessage">
+                <span class="emoji">✅</span>
+                <h3>Заявка отправлена!</h3>
+                <p>Скоро свяжемся для уточнения деталей</p>
+            </div>
         </div>
     </div>
 
@@ -419,7 +364,7 @@
             grid.appendChild(card);
         });
 
-        // ===== ОБРАБОТЧИК ЗАКАЗА =====
+        // ===== ОТКРЫТИЕ МОДАЛА =====
         let selectedProduct = null;
 
         document.addEventListener('click', function(e) {
@@ -430,11 +375,12 @@
                     document.getElementById('modalTitle').textContent = selectedProduct.name;
                     document.getElementById('modalPrice').textContent = selectedProduct.price;
                     document.getElementById('modalDesc').textContent = selectedProduct.full;
-                    document.getElementById('orderModal').classList.add('active');
-                    document.getElementById('formStatus').textContent = '';
+                    
+                    // Показываем детали, скрываем успех
+                    document.getElementById('serviceDetails').style.display = 'block';
                     document.getElementById('successMessage').classList.remove('show');
-                    document.getElementById('submitBtn').style.display = 'block';
-                    document.getElementById('orderForm').reset();
+                    
+                    document.getElementById('orderModal').classList.add('active');
                     document.body.style.overflow = 'hidden';
                 }
             }
@@ -450,39 +396,26 @@
             if (e.target === this) closeModal();
         });
 
-        // ===== ФОРМА =====
-        const form = document.getElementById('orderForm');
-        const status = document.getElementById('formStatus');
+        // ===== ЗАКАЗ =====
+        document.getElementById('orderBtn').addEventListener('click', function() {
+            if (!selectedProduct) return;
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
+            // Данные пользователя из Telegram
+            const firstName = userData?.first_name || 'Пользователь';
+            const lastName = userData?.last_name || '';
+            const username = userData?.username || 'без_username';
+            const userId = userData?.id || 'anonymous';
+            const fullName = `${firstName} ${lastName}`.trim();
 
-            const name = document.getElementById('userName').value.trim();
-            const phone = document.getElementById('userPhone').value.trim();
-            const email = document.getElementById('userEmail').value.trim();
-
-            if (!name || !phone || !selectedProduct) {
-                status.style.color = '#b34a4a';
-                status.textContent = 'Заполните имя и телефон.';
-                return;
-            }
-
-            status.textContent = '';
-            document.getElementById('submitBtn').style.display = 'none';
-            document.getElementById('successMessage').classList.add('show');
-
-            // ===== ДАННЫЕ ДЛЯ ОТПРАВКИ =====
+            // ===== ОТПРАВКА АДМИНУ =====
             const data = {
-                name: name,
-                phone: phone,
-                email: email || 'не указана',
+                name: fullName,
+                username: username,
+                user_id: userId,
                 service: selectedProduct.name,
-                price: selectedProduct.price,
-                user_id: userData?.id || 'anonymous',
-                username: userData?.username || 'без_username'
+                price: selectedProduct.price
             };
 
-            // ===== ОТПРАВКА В TELEGRAM =====
             if (tg) {
                 try {
                     tg.sendData(JSON.stringify(data));
@@ -497,13 +430,16 @@
                 }).catch(error => console.error('Ошибка:', error));
             }
 
-            // Закрываем модал через 3 секунды
+            // ===== ПОКАЗЫВАЕМ КРАСИВОЕ СООБЩЕНИЕ =====
+            document.getElementById('serviceDetails').style.display = 'none';
+            document.getElementById('successMessage').classList.add('show');
+
+            // Закрываем через 2.5 секунды
             setTimeout(() => {
                 closeModal();
                 document.getElementById('successMessage').classList.remove('show');
-                document.getElementById('submitBtn').style.display = 'block';
-                form.reset();
-            }, 3000);
+                document.getElementById('serviceDetails').style.display = 'block';
+            }, 2500);
         });
     </script>
 
