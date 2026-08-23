@@ -2,8 +2,8 @@ import logging
 import json
 import os
 from flask import Flask, request, jsonify, send_from_directory
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Application, CommandHandler, ContextTypes
+import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 import threading
 
 # ========== НАСТРОЙКА ==========
@@ -17,77 +17,70 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ========== СОЗДАЕМ БОТА ==========
+bot = telebot.TeleBot(TOKEN)
+
 # ========== FLASK ДЛЯ HTML ==========
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    """Отдает index.html"""
     return send_from_directory('.', 'index.html')
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    """Принимает данные от WebApp"""
     try:
         data = request.get_json()
         logger.info(f"Получены данные от WebApp: {data}")
-        return jsonify({"status": "ok", "message": "Данные получены"}), 200
+        return jsonify({"status": "ok"}), 200
     except Exception as e:
         logger.error(f"Ошибка: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error"}), 500
 
-# ========== TELEGRAM БОТ ==========
+@app.route('/health')
+def health():
+    return "OK", 200
+
+# ========== КОМАНДЫ БОТА ==========
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    """Команда /start"""
+    host = os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost:5000')
+    WEBAPP_URL = f"https://{host}"
+    
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton(
+        "🚀 Открыть приложение",
+        web_app=WebAppInfo(url=WEBAPP_URL)
+    ))
+    
+    bot.send_message(
+        message.chat.id,
+        f"👋 Привет, {message.from_user.first_name}!\n\nНажми на кнопку:",
+        reply_markup=keyboard
+    )
+
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    bot.send_message(message.chat.id, "📖 /start - открыть приложение\n/help - помощь")
+
+@bot.message_handler(func=lambda message: True)
+def echo(message):
+    bot.send_message(
+        message.chat.id,
+        f"📨 Получено: {message.text}\n\nНапиши /start"
+    )
+
+# ========== ЗАПУСК БОТА В ПОТОКЕ ==========
 def run_bot():
     """Запуск бота в отдельном потоке"""
-    
-    # Создаем приложение
-    application = Application.builder().token(TOKEN).build()
-    
-    # URL для WebApp (автоматически подставится)
-    WEBAPP_URL = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost:5000')}"
-    
-    # ===== КОМАНДЫ =====
-    async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Команда /start"""
-        user = update.effective_user
-        
-        # Кнопка с WebApp
-        keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                "🚀 Открыть приложение",
-                web_app=WebAppInfo(url=WEBAPP_URL)
-            )
-        ]])
-        
-        await update.message.reply_text(
-            f"👋 Привет, {user.first_name}!\n\n"
-            "Нажми на кнопку, чтобы открыть мини-приложение:",
-            reply_markup=keyboard
-        )
-    
-    async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Команда /help"""
-        await update.message.reply_text(
-            "📖 Доступные команды:\n"
-            "/start - открыть приложение\n"
-            "/help - помощь\n\n"
-            "Просто нажми кнопку 'Открыть приложение'!"
-        )
-    
-    # Регистрируем команды
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-    
-    # Запускаем бота
     logger.info("🤖 Бот запущен!")
-    application.run_polling()
+    bot.infinity_polling()
 
 # ========== ЗАПУСК ==========
 if __name__ == "__main__":
-    # Запускаем бота в отдельном потоке
-    bot_thread = threading.Thread(target=run_bot)
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
-    
-    # Запускаем Flask сервер для HTML
     logger.info(f"🚀 Сервер запущен на порту {PORT}")
     app.run(host='0.0.0.0', port=PORT)
