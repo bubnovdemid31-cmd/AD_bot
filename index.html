@@ -8,16 +8,15 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ===== Жёсткая зелёная тема (не зависит от темы Telegram) ===== */
         :root {
             --bg: #f7fbf8;
             --text: #1e2e2a;
             --hint: #3b5f4e;
-            --link: #2d6b4a;
-            --btn: #2d6b4a;
-            --btn-text: #ffffff;
-            --card: #ffffff;
-        }
+           --link: #2d6b4a;
+           --btn: #2d6b4a;
+           --btn-text: #ffffff;
+          --card: #ffffff;
+}
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -26,7 +25,6 @@
             line-height: 1.5;
             padding: 16px 14px 30px;
             -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
         }
 
         .header { text-align: center; margin-bottom: 20px; }
@@ -35,7 +33,6 @@
             font-size: 24px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: #1a4a3a;
         }
         .logo span { color: var(--link); font-weight: 300; }
 
@@ -49,7 +46,6 @@
             font-size: 18px;
             font-weight: 700;
             margin: 18px 0 12px;
-            color: #0e2f24;
         }
 
         /* ===== Карточка ===== */
@@ -58,10 +54,9 @@
             border-radius: 18px;
             padding: 16px;
             margin-bottom: 12px;
-            border: 1.5px solid rgba(80, 140, 110, 0.1);
+            border: 1.5px solid transparent;
             transition: 0.2s;
             cursor: pointer;
-            box-shadow: 0 2px 10px rgba(40, 80, 60, 0.04);
         }
         .product-card:active { transform: scale(0.99); }
 
@@ -69,7 +64,6 @@
             font-size: 17px;
             font-weight: 700;
             margin-bottom: 4px;
-            color: #0e2f24;
         }
 
         .product-price {
@@ -90,7 +84,6 @@
             position: fixed;
             inset: 0;
             background: rgba(20, 45, 35, 0.6);
-            backdrop-filter: blur(4px);
             display: none;
             align-items: flex-end;
             z-index: 999;
@@ -120,11 +113,7 @@
             margin: 0 auto 14px;
         }
 
-        .modal-sheet h2 {
-            font-size: 21px;
-            margin-bottom: 6px;
-            color: #0e2f24;
-        }
+        .modal-sheet h2 { font-size: 21px; margin-bottom: 6px; }
 
         .modal-price {
             font-size: 20px;
@@ -138,7 +127,6 @@
             white-space: pre-wrap;
             line-height: 1.55;
             margin-bottom: 20px;
-            color: #1e3a30;
         }
 
         .modal-actions { display: flex; gap: 10px; }
@@ -163,10 +151,9 @@
         .btn-fill {
             background: var(--btn);
             color: var(--btn-text);
-            box-shadow: 0 6px 18px rgba(45, 107, 74, 0.25);
         }
 
-        /* ===== Инфо-блок ===== */
+        /* ===== Блок «что дальше» ===== */
         .info-block {
             margin-top: 22px;
             padding: 16px;
@@ -190,8 +177,8 @@
     <div id="catalog"></div>
 
     <div class="info-block">
-        💬 После нажатия «Оставить заявку» мы получим ваш <b>Telegram-профиль</b>
-        и напишем вам прямо в этот чат. Никакие телефоны и почты указывать не нужно.
+        💬 После нажатия «Оставить заявку» мы получим ваш <b>Telegram-профиль</b> и
+        напишем вам прямо в этот чат. Никакие телефоны и почты указывать не нужно.
     </div>
 
     <!-- Модалка -->
@@ -214,9 +201,7 @@
         if (tg) {
             tg.ready();
             tg.expand();
-            // Принудительно зелёная тема — не зависит от темы Telegram
-            tg.setHeaderColor?.('#2d6b4a');
-            tg.setBackgroundColor?.('#f7fbf8');
+            tg.setHeaderColor?.('secondary_bg_color');
         }
 
         // ===== Данные услуг =====
@@ -302,7 +287,7 @@
             }
         ];
 
-        // ===== Рендер карточек =====
+        // ===== Рендер =====
         const catalogEl = document.getElementById('catalog');
         products.forEach(p => {
             const card = document.createElement('div');
@@ -347,26 +332,89 @@
         // ===== Отправка заявки =====
         document.getElementById('modalSubmit').addEventListener('click', () => {
             if (!currentProduct) return;
-
+        
             if (!tg) {
                 alert('Откройте это приложение через Telegram-бота.');
                 return;
             }
-
-            // Формат: service_id|service_name|price
+        
             const payload = [
                 currentProduct.id,
                 currentProduct.name,
                 currentProduct.price
             ].join('|');
+        
+            console.log('Sending payload:', payload);
+        
+            // 1) Тактильный отклик
+            tg.HapticFeedback?.notificationOccurred('success');
+        
+            // 2) Показываем попап подтверждения
+            const showSuccess = () => {
+                // Попробуем нативный попап Telegram
+                if (tg.showPopup) {
+                    tg.showPopup({
+                        title: '✅ Заявка отправлена!',
+                        message: 'Мы свяжемся с вами в ближайшее время.',
+                        buttons: [{ type: 'ok' }]
+                    });
+                } else if (tg.showAlert) {
+                    tg.showAlert('✅ Заявка отправлена! Мы свяжемся с вами скоро.');
+                } else {
+                    alert('✅ Заявка отправлена! Мы свяжемся с вами скоро.');
+                }
+            };
 
-            console.log('Sending payload:', payload); // для отладки
-
+            // 3) Собственный HTML-попап — на случай если Telegram API молчит
+            const showCustomPopup = () => {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed; inset: 0; z-index: 9999;
+                    background: rgba(20,45,35,0.75);
+                    display: flex; align-items: center; justify-content: center;
+                    padding: 24px; animation: fadeIn 0.2s ease;
+                `;
+                overlay.innerHTML = `
+                    <div style="
+                        background: #fff; border-radius: 22px;
+                        padding: 28px 22px; max-width: 340px; width: 100%;
+                        text-align: center; box-shadow: 0 20px 60px rgba(0,20,10,0.35);
+                        animation: popIn 0.25s ease;
+                    ">
+                        <div style="
+                            width: 64px; height: 64px; margin: 0 auto 16px;
+                            background: #2d6b4a; border-radius: 50%;
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 32px; color: #fff;
+                        ">✓</div>
+                        <h2 style="
+                            font-size: 20px; color: #0e2f24;
+                            margin-bottom: 8px; font-weight: 700;
+                        ">Заявка отправлена!</h2>
+                        <p style="
+                            font-size: 14px; color: #3b5f4e;
+                            line-height: 1.5; margin-bottom: 20px;
+                        ">Мы свяжемся с вами в ближайшее время в этом чате.</p>
+                        <button id="popupClose" style="
+                            width: 100%; padding: 13px; border: none;
+                            background: #2d6b4a; color: #fff;
+                            border-radius: 14px; font-size: 15px; font-weight: 600;
+                            cursor: pointer; font-family: inherit;
+                        ">Отлично!</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                document.getElementById('popupClose').onclick = () => overlay.remove();
+            };
+        
+            // Показываем красивый кастомный попап
+            showCustomPopup();
+        
+            // Отправляем данные в бот (закроет Mini App)
             try {
                 tg.sendData(payload);
-                tg.HapticFeedback?.notificationOccurred('success');
             } catch (e) {
-                alert('Ошибка отправки: ' + e.message);
+                console.error('sendData error:', e);
             }
         });
     </script>
